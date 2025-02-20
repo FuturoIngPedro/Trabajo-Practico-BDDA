@@ -60,26 +60,28 @@ sp_configure 'Ad Hoc Distributed Queries', 1;
 RECONFIGURE;
 GO
 
-
-CREATE PROCEDURE ddbba.ImportarAccesoriosElectronicos
-    @RutaArchivo NVARCHAR(255),
-    @NombreHoja NVARCHAR(50)  
+--ACCESORIOS ELECTRONICOS
+CREATE OR ALTER PROCEDURE ddbba.ImportarAccesoriosElectronicos
+	@NomArch VARCHAR(255)
 AS
 BEGIN
-    DECLARE @SQL NVARCHAR(MAX);
+	
+	DECLARE @SQL NVARCHAR(MAX);
 
-    SET @SQL = '
-    INSERT INTO ddbba.Accesorios_Electronicos
-	SELECT *
-    FROM OPENROWSET(''Microsoft.ACE.OLEDB.12.0'',  
-                    ''Excel 12.0 Xml;HDR=YES;Database=' + @RutaArchivo + ''',  
-                    ''SELECT * FROM [' + @NombreHoja + '$]'');';
+	SET @SQL = 
+	'INSERT INTO  ddbba.Accesorios_Electronicos (Producto, Precio_Unitario)
+	SELECT "Product", [Precio Unitario en Dolares]
+	FROM OPENROWSET(
+	''Microsoft.ACE.OLEDB.16.0'',
+	''Excel 12.0;Database=' + @NomArch + ';HDR=YES;'',
+	''SELECT * FROM [Sheet1$]'')';
 
-    EXEC sp_executesql @SQL;
+	EXEC sp_executesql @SQL;
 END;
 GO
 
-drop procedure ddbba.ImportarAccesoriosElectronicos
+EXEC ddbba.ImportarAccesoriosElectronicos
+	@NomArch = 'C:\\Users\\taiel\\Desktop\\TP_integrador_Archivos\\Productos\\Electronic accessories.xlsx';
 
-EXEC ddbba.ImportarAccesoriosElectronicos 'C:\Users\jimeb\Desktop\TP_BDDA\Productos\Electronic accessories.xlsx','Sheet1'
-    
+--para verificar si se cargaron los datos
+SELECT * FROM ddbba.Accesorios_Electronicos
