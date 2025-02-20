@@ -1,25 +1,34 @@
---Validaci髇 de existencia de base de datos para su creaci髇
-IF NOT EXISTS (SELECT name FROM sys.databases WHERE name = 'Com1353G02')
+--Validaci贸n de existencia de base de datos para su creaci贸n
+IF NOT EXISTS (SELECT name FROM sys.databases WHERE name = 'Com1353G02') 
 BEGIN
-    CREATE DATABASE Com1353G02;
+    CREATE DATABASE Com1353G02
+	COLLATE Latin1_General_CI_AS
 END;
+ELSE
+	print 'ya existe la base de datos Com1353G02'
 GO
 
 USE Com1353G02;
 GO
 
---Validaci髇 de existencia de esquema para su creaci髇
+--Validaci贸n de existencia de esquema para su creaci贸n
 IF NOT EXISTS (SELECT name FROM sys.schemas WHERE name = 'ddbba')
 BEGIN
     EXEC('CREATE SCHEMA ddbba');
 END;
+ELSE 
+	print 'ya existe el esquema ddbba'
 GO
 
 --DROP PROCEDURE ddbba.CrearTablaVentas
 
-CREATE PROCEDURE ddbba.CrearTablaVentas
+
+--Procedure para crear todas las tablas
+CREATE PROCEDURE ddbba.CrearTablas
 AS
 BEGIN
+----------------VENTAS REGISTRADAS----------------
+--TABLA VENTAS
     IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'Ventas')
     BEGIN
         CREATE TABLE ddbba.Ventas (
@@ -38,33 +47,109 @@ BEGIN
             IdentificadorPago NVARCHAR(50)
         );
     END
+	ELSE print 'La tabla Ventas ya existe'
+
+----------------PRODUCTOS----------------
+--TABLA CATALOGO
+	IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME='Catalogo')
+	BEGIN
+		CREATE TABLE ddbba.Catalogo(
+			ID INT PRIMARY KEY,
+			Categoria VARCHAR(100),
+			Nombre VARCHAR(100),
+			Precio DECIMAL (10,2),
+			Referencia_Precio decimal (10,2),
+			Unidad CHAR(6),
+			Fecha_Hora DATETIME
+			)
+	END
+	ELSE print 'La tabla Catalogo ya existe'
+
+--TABLA ACCESORIOS ELECTRONICOS
+	IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'Accesorios_Electronicos')
+	BEGIN
+		CREATE TABLE ddbba.Accesorios_Electronicos(
+			Producto VARCHAR(40),
+			Precio_Unitario DECIMAL (10,2)
+			)
+	END
+	ELSE print 'La tabla Accesorios_Electronicos ya existe'
+
+--TABLA PRODUCTOS IMPORTADOS
+	IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME='Productos_importados')
+	BEGIN
+		CREATE TABLE ddbba.Productos_Importados(
+			ID INT,
+			Nombre VARCHAR(40),
+			Proveedor VARCHAR(40),
+			Categoria VARCHAR(40),
+			Cantidad_Por_Unidad VARCHAR (40),
+			Precio_Unidad DECIMAL (10,2)
+			)
+	END
+	ELSE print 'La tabla Productos_Importados ya existe'
+
+----------------INFORMACION COMPLEMENTARIA----------------
+--TABLA SUCURSAL
+	IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME='Sucursal')
+	BEGIN
+		CREATE TABLE ddbba.Sucursal(
+			Ciudad VARCHAR(40),
+			RemplazarPor/*???*/ VARCHAR (40),
+			Direccion VARCHAR (100),
+			Telefono INT
+			)
+	END
+	ELSE print 'La tabla Sucursal ya existe'
+
+--TABLA EMPLEADOS
+	IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME='Empleados')	
+	BEGIN
+		CREATE TABLE ddbba.Empleados(
+			Legajo INT PRIMARY KEY,
+			Nombre VARCHAR(40),
+			Apellido VARCHAR (40),
+			DNI INT ,
+			Direccion VARCHAR(100),
+			Email_Empresa NVARCHAR(100),
+			CUIL INT,
+			Cargo VARCHAR (50),
+			Sucursal VARCHAR(50),
+			Turno VARCHAR(30)
+			)
+	END
+	ELSE print 'La tabla Empleados ya existe'
+
+--TABLA MEDIOS DE PAGO
+	IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME='Medio_De_Pago')
+	BEGIN
+		CREATE TABLE ddbba.Medio_De_Pago(
+		Medio VARCHAR(40)
+		)
+	END
+	ELSE print 'La tabla Medio_De_Pago ya existe'
+
+--TABLA CLASIFICACION DE PRODUCTOS
+	IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME='Clasificacion_De_Productos')
+	BEGIN
+		CREATE TABLE ddbba.Clasificacion_Productos(
+			Linea_De_Producto VARCHAR(40),
+			Producto VARCHAR(40)
+			)
+	END
+	ELSE print 'La tabla Clasificacion_Productos ya existe'
+
+print 'Tablas creadas'
 END;
+go
 
-EXEC ddbba.CrearTablaVentas;
+ --Ejecutamos el SP
+EXEC ddbba.CrearTablas;
+go
 
---DROP PROCEDURE ddbba.ImportarVentas
 
-CREATE PROCEDURE ddbba.ImportarVentas
-    @RutaArchivo NVARCHAR(255)
-AS
-BEGIN
-    DECLARE @SQL NVARCHAR(MAX);
 
-    SET @SQL = '
-    BULK INSERT ddbba.Ventas
-    FROM ''' + @RutaArchivo + ''' 
-    WITH (
-        FORMAT = ''CSV'',
-        FIRSTROW = 2,
-        FIELDTERMINATOR = '';'',
-        ROWTERMINATOR = ''\n'',
-        TABLOCK,
-        CODEPAGE = ''65001'' -- UTF-8 para caracteres especiales
-    );';
 
-    EXEC sp_executesql @SQL;
-END;
 
-EXEC ddbba.ImportarVentas 'C:\Users\Pedro Melissari\Desktop\TP_integrador_Archivos\Ventas_registradas.csv';
 
-SELECT * FROM ddbba.Ventas
+
