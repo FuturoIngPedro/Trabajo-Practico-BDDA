@@ -62,7 +62,7 @@ GO
 
 --ACCESORIOS ELECTRONICOS
 CREATE OR ALTER PROCEDURE ddbba.ImportarAccesoriosElectronicos
-	@NomArch VARCHAR(255)
+	@RutaArchivo VARCHAR(255)
 AS
 BEGIN
 	
@@ -73,7 +73,7 @@ BEGIN
 	SELECT "Product", [Precio Unitario en Dolares]
 	FROM OPENROWSET(
 	''Microsoft.ACE.OLEDB.16.0'',
-	''Excel 12.0;Database=' + @NomArch + ';HDR=YES;'',
+	''Excel 12.0;Database=' + @RutaArchivo + ';HDR=YES;'',
 	''SELECT * FROM [Sheet1$]'')';
 
 	EXEC sp_executesql @SQL;
@@ -81,7 +81,34 @@ END;
 GO
 
 EXEC ddbba.ImportarAccesoriosElectronicos
-	@NomArch = 'C:\\Users\\taiel\\Desktop\\TP_integrador_Archivos\\Productos\\Electronic accessories.xlsx';
+	@RutaArchivo = 'C:\\Users\\taiel\\Desktop\\TP_integrador_Archivos\\Productos\\Electronic accessories.xlsx';
 
 --para verificar si se cargaron los datos
 SELECT * FROM ddbba.Accesorios_Electronicos
+
+
+--Productos importados
+CREATE OR ALTER PROCEDURE ddbba.ImportarProductosImportados
+	@RutaArchivo VARCHAR(255)
+AS
+BEGIN
+	
+	DECLARE @SQL NVARCHAR(MAX);
+
+    SET @SQL = 
+	'INSERT INTO  ddbba.Productos_importados (ID, Nombre,Proveedor,Categoria,Cantidad_Por_Unidad,Precio_Unidad)
+	SELECT "idProducto", "NombreProducto","Proveedor","Categoría","CantidadPorUnidad","PrecioUnidad"
+	FROM OPENROWSET(
+	''Microsoft.ACE.OLEDB.16.0'',
+	''Excel 12.0;Database=' + @RutaArchivo + ';HDR=YES;'',
+	''SELECT * FROM [Listado de Productos$]'')';
+
+	EXEC sp_executesql @SQL;
+END;
+GO
+
+EXEC ddbba.ImportarProductosImportados
+	@RutaArchivo = 'C:\Users\taiel\Desktop\TP_integrador_Archivos\Productos\Productos_importados.xlsx';
+
+--para verificar si se cargaron los datos
+SELECT * FROM ddbba.Productos_importados
